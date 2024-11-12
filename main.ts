@@ -197,11 +197,11 @@ namespace motor {
      * S1~S8.
      * -100~100.
 	*/
-    //% blockId=motor_servo block="ServoCC|%index|power"
-    //% weight=100
+    //% blockId=motor_servocc block="ServoCC|%index|power|%power"
+    //% weight=110
     //% power.min=-100 power.max=100
     //% index.fieldEditor="gridpicker" index.fieldOptions.columns=4
-    export function servocc(index: Servos, degree: number): void {
+    export function servocc(index: Servos, power: number): void {
         if (!initialized) {
             initPCA9685()
         }
