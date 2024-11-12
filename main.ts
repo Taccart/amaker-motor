@@ -206,10 +206,12 @@ namespace motor {
             initPCA9685()
         }
         // 50hz
-        if power>100 or power < -100:
-	    power=0
-        let value = 2048+power/100*2048
-        setPwm(index + 7, 0, value)
+        if (power>=100 ||  power < -100) {
+	    setPwm(index + 7, 0, 2047)
+	}
+	else  { 
+	        setPwm(index + 7, 0, 2048+power/100*2048)
+	}
     }
 
 	
