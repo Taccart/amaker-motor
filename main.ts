@@ -214,6 +214,22 @@ namespace motor {
 	}
     }
 
+
+    /**
+	 * Steering gear control function.
+     * S1~S8.
+     * -100~100.
+	*/
+    //% blockId=motor_servocc block="ServoC|%index|val|%val"
+    //% weight=110
+    //% val.min=0 val.max=4095
+    //% index.fieldEditor="gridpicker" index.fieldOptions.columns=4
+    export function servov(index: Servos, val: number): void {
+        if (!initialized) {
+            initPCA9685()
+        }
+        setPwm(index + 7, 0, val/20000)
+    }
 	
     /**
 	 * Execute a motor
