@@ -248,6 +248,27 @@ namespace motor {
     }
 
     /**
+	 * Steering gear control function.
+     * S1~S8.
+     * -100~100.
+	*/
+    //% blockId=motor_servo block="ServoCC|%index|power"
+    //% weight=100
+    //% power.min=-100 power.max=100
+    //% index.fieldEditor="gridpicker" index.fieldOptions.columns=4
+    export function servo(index: Servos, degree: number): void {
+        if (!initialized) {
+            initPCA9685()
+        }
+        // 50hz
+        if power>100 or power < -100:
+	    power=0
+        let value = 2048+power/100*2048
+        setPwm(index + 7, 0, value)
+    }
+
+	
+    /**
 	 * Execute a motor
      * M1~M4.
      * speed(0~255).
