@@ -1,7 +1,7 @@
 {
     "name": "motor",
-    "version": "0.0.1",
-    "description": "This is dc motor, stepper motor, steering gear library.",
+    "version": "0.0.2",
+    "description": "This is dc motor, servo and servocc  library.",
     "license": "GNU",
     "dependencies": {
         "core": "*"
