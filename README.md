@@ -1,4 +1,4 @@
-# DF-Driver
+# CustomDF-Driver
 
 Micro:bit motor drive expansion board.
 ---------------------------------------------------------
@@ -53,5 +53,5 @@ GNU
 * for PXT/microbit
 (The metadata above is needed for package search.)
 ```package
-gamePad=github:DFRobot/pxt-motor
+gamePad=github:Taccart/forked-pxt-motor
 ```
