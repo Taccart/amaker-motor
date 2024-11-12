@@ -197,11 +197,11 @@ namespace motor {
      * S1~S8.
      * -100~100.
 	*/
-    //% blockId=motor_servocc block="ServoCC|%index|power|%power"
+    //% blockId=motor_servocc block="ServoC|%index|power|%power"
     //% weight=110
     //% power.min=-100 power.max=100
     //% index.fieldEditor="gridpicker" index.fieldOptions.columns=4
-    export function servocc(index: Servos, power: number): void {
+    export function servoc(index: Servos, power: number): void {
         if (!initialized) {
             initPCA9685()
         }
@@ -210,7 +210,7 @@ namespace motor {
 	    setPwm(index + 7, 0, 2047)
 	}
 	else  { 
-	        setPwm(index + 7, 0, 2048+power/100*2048)
+	        setPwm(index + 7, 0, (2048+power/100*2048)/20000)
 	}
     }
 
