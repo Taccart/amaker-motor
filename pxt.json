@@ -1,7 +1,7 @@
 {
-    "name": "motor",
-    "version": "0.0.2",
-    "description": "This is dc motor, servo and servocc  library.",
+    "name": "amaker-motor",
+    "version": "0.0.3",
+    "description": "This is dc motor, positional and constinuous rotation servos  library.",
     "license": "GNU",
     "dependencies": {
         "core": "*"
