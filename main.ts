@@ -82,7 +82,7 @@ namespace motor {
         S7 = 0x02,
         S8 = 0x01
     }
-
+	
     /**
      * The user selects the 4-way dc motor.
      */
@@ -196,7 +196,7 @@ namespace motor {
 	 * Steering gear control function.
      * S1~S8.
      * -100~100.
-	*/
+	
     //% blockId=motor_servocc block="ServoC|%index|power|%power"
     //% weight=110
     //% power.min=-100 power.max=100
@@ -213,21 +213,41 @@ namespace motor {
 	        setPwm(index + 7, 0, (2048+power/100*2048)/20000)
 	}
     }
-
+*/
 
     /**
 	 * Steering gear control function.
      * S1~S8.
      * -100~100.
 	*/
-    //% blockId=motor_servocc block="ServoC|%index|val|%val"
+    //% blockId=motor_ServoContinuousRotation block="ServoSpeed|%index|val|%val"
     //% weight=110
-    //% val.min=0 val.max=4095
+    //% val.min=-200 val.max=200
     //% index.fieldEditor="gridpicker" index.fieldOptions.columns=4
-    export function servov(index: Servos, val: number): void {
+    export function servospeed(index: Servos, val: number): void {
         if (!initialized) {
             initPCA9685()
         }
+	
+	if (val<0) {setPwm(index + 7, 0, val)}
+	else if (val>0) {setPwm(index + 7, 0, val)}
+	else {setPwm(index + 7, 0, val)}
+    }
+
+    /**
+	 * Steering gear control function.
+     * S1~S8.
+     * -100~100.
+	*/
+    //% blockId=motor_ServoContinuousRotation block="ServoValue|%index|val|%val"
+    //% weight=110
+    //% val.min=0 val.max=4096
+    //% index.fieldEditor="gridpicker" index.fieldOptions.columns=4
+    export function servoValue(index: Servos, val: number): void {
+        if (!initialized) {
+            initPCA9685()
+        }
+	if 
         setPwm(index + 7, 0, val)
     }
 	
