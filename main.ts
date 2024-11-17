@@ -178,11 +178,11 @@ namespace motor {
      * S1~S8.
      * 0°~180°.
 	*/
-    //% blockId=motor_servo block="Servo|%index|degree|%degree"
+    //% blockId=motor_servo block="ServoPosition|%index|degree|%degree"
     //% weight=100
     //% degree.min=0 degree.max=180
     //% index.fieldEditor="gridpicker" index.fieldOptions.columns=4
-    export function servo(index: Servos, degree: number): void {
+    export function servoPosition(index: Servos, degree: number): void {
         if (!initialized) {
             initPCA9685()
         }
@@ -195,8 +195,7 @@ namespace motor {
     /**
 	 * Steering gear control function.
      * S1~S8.
-     * -100~100.
-	
+     * -100~100.	
     //% blockId=motor_servocc block="ServoC|%index|power|%power"
     //% weight=110
     //% power.min=-100 power.max=100
@@ -220,18 +219,18 @@ namespace motor {
      * S1~S8.
      * -100~100.
 	*/
-    //% blockId=motor_ServoContinuousRotation block="ServoSpeed|%index|val|%val"
+    //% blockId=motor_ServoContinuousRotation block="ServoSpeed|%index|speed|%speed"
     //% weight=110
-    //% val.min=-200 val.max=200
+    //% speed.min=-200 speed.max=200
     //% index.fieldEditor="gridpicker" index.fieldOptions.columns=4
-    export function servospeed(index: Servos, val: number): void {
+    export function servoSpeed(index: Servos, speed: number): void {
         if (!initialized) {
             initPCA9685()
         }
 	
-	if (val<0) {setPwm(index + 7, 0, val)}
-	else if (val>0) {setPwm(index + 7, 0, val)}
-	else {setPwm(index + 7, 0, val)}
+	if (speed<0) {setPwm(index + 7, 0, speed-89)}
+	else if (speed>0) {setPwm(index + 7, 0, speed+320)}
+	else {setPwm(index + 7, 0, speed)}
     }
 
     /**
