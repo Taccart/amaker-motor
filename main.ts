@@ -1,6 +1,6 @@
 /*！
  * @file amaker-motor/main.ts
- * @brief Amaker fork of DFRobot's microbit motor drive makecode library.
+ * @brief aMaker fork of DFRobot's microbit motor drive makecode library.
  * @n [Get the original module here](http://www.dfrobot.com.cn/goods-1577.html)
  * @n This is the microbit special motor drive library, which realizes control 
  *    of the eight-channel steering gear, two-step motor .
@@ -14,7 +14,7 @@
  */
 
 /**
- *This is DFRobot:motor user motor and steering control function.
+ *This is aMaker:motor user motor and steering control function.
  */
 //% weight=10 color=#DF6721 icon="\uf013" block="DF-Driver"
 namespace motor {
