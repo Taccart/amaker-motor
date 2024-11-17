@@ -217,7 +217,7 @@ namespace motor {
      * -100~100.
 	*/
     //% blockId=motor_ServoContinuousRotation block="ServoValue|%index|val|%val"
-    //% weight=110
+    //% weight=120
     //% val.min=0 val.max=4096
     //% index.fieldEditor="gridpicker" index.fieldOptions.columns=4
     export function servoValue(index: Servos, val: number): void {
