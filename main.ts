@@ -246,7 +246,7 @@ namespace motor {
         if (!initialized) {
             initPCA9685()
         }
-	if 
+
         setPwm(index + 7, 0, val)
     }
 	
