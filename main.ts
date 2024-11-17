@@ -17,7 +17,7 @@
  *This is aMaker:motor user motor and steering control function.
  */
 //% weight=10 color=#1a61a9 icon="\uf013" block="aMaker-motor"
-namespace motor {
+namespace amaker-motor {
     const PCA9685_ADDRESS = 0x40
     const MODE1 = 0x00
     const MODE2 = 0x01
