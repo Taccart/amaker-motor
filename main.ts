@@ -20,57 +20,18 @@
 namespace amaker_motor {
     const PCA9685_ADDRESS = 0x40
     const MODE1 = 0x00
-    const MODE2 = 0x01
-    const SUBADR1 = 0x02
-    const SUBADR2 = 0x03
-    const SUBADR3 = 0x04
     const PRESCALE = 0xFE
     const LED0_ON_L = 0x06
-    const LED0_ON_H = 0x07
-    const LED0_OFF_L = 0x08
-    const LED0_OFF_H = 0x09
-    const ALL_LED_ON_L = 0xFA
-    const ALL_LED_ON_H = 0xFB
-    const ALL_LED_OFF_L = 0xFC
-    const ALL_LED_OFF_H = 0xFD
 
-    const STP_CHA_L = 2047
-    const STP_CHA_H = 4095
+    export const servo_value_max_backward = 85
+    export const servo_value_min_backward =285
+    export const servo_value_stopped = 310
+    export const servo_value_min_forward = 335
+    export const servo_value_max_forward = 535
 
-    const STP_CHB_L = 1
-    const STP_CHB_H = 2047
-
-    const STP_CHC_L = 1023
-    const STP_CHC_H = 3071
-
-    const STP_CHD_L = 3071
-    const STP_CHD_H = 1023
-
-
-    const BYG_CHA_L = 3071
-    const BYG_CHA_H = 1023
-
-    const BYG_CHB_L = 1023
-    const BYG_CHB_H = 3071
-
-    const BYG_CHC_L = 4095
-    const BYG_CHC_H = 2047
-
-    const BYG_CHD_L = 2047
-    const BYG_CHD_H = 4095
 
     /**
-     * The user can choose the step motor model.
-     */
-    export enum Stepper {
-        //% block="42"
-        Ste1 = 1,
-        //% block="28"
-        Ste2 = 2
-    }
-
-    /**
-     * The user can select the 8 steering gear controller.
+     * The user can select ththise 8 steering gear controller.
      */
     export enum Servos {
         S1 = 0x08,
@@ -82,7 +43,105 @@ namespace amaker_motor {
         S7 = 0x02,
         S8 = 0x01
     }
+
+    const  allServos  : amaker_motor.Servos[] = [Servos.S1,Servos.S2,Servos.S3,Servos.S4,Servos.S5,Servos.S6,Servos.S7,Servos.S8]
+    
+    /**
+     * MecanumWheelsValue  is a placeholder for mecanum
+     */
+    export class MecanumWheelsValue   {
+        // Those values are empiric. Maybe could we allow to change them.
+        //                                     backward | stop | forward
+        // we want to handle speeds as     -100 ...  -1 |    0 |   1 ... 100
+        // and this is converted as servo    85 ... 285 |  310 | 335 ... 535
+        
+        public speeds:number[]
+            
+        public toServoValues () : MecanumWheelsValue {
+            return new MecanumWheelsValue( {
+                FL:this.toContinuousRotationValue(this.speeds[0]),
+                FR:this.toContinuousRotationValue(this.speeds[1]),
+                BL:this.toContinuousRotationValue(this.speeds[2]),
+                BR:this.toContinuousRotationValue(this.speeds[3]) }
+            )
+        }
+        /**
+         * Normalize speed to a range between -100 and 100 and return the corresponding value for continuous rotation servo
+         * @param {number} speed - number betwen -100 and 100. Negative = counter clockwise, positive = clockwise. 
+         * @returns 
+         */
+        public toContinuousRotationValue(speed: number ) : number {
+                        
+            if (speed<-100)     speed=-100;
+            else if (speed>100) speed=100;
+            
+            if (speed >0)        {
+                return amaker_motor.servo_value_min_forward + speed/100*(amaker_motor.servo_value_max_forward-amaker_motor.servo_value_min_forward);
+            }
+            else if (speed <0)   {
+                return amaker_motor.servo_value_min_backward + speed/100* (amaker_motor.servo_value_max_backward-amaker_motor.servo_value_min_backward);
+            }
+            else                 { 
+                return amaker_motor.servo_value_stopped; }
+
+        }
+        public constructor (
+            fields? :{
+                FL?:number,
+                FR?:number,
+                BL?:number,
+                BR?:number;
+            }) { 
+                if (fields) {
+                    this.speeds=[fields.FL,fields.FR,fields.BL,fields.BR];
+                }
+            }
+        
+    };
+
 	
+/**
+ * builds a MecanumMove using given lateral (left-right), longitudinal (forward-backward) and rotational  arguments
+ * @param {number} lat - lateral movement -100>100
+ * @param {number} lon - longitudinal movement -100>100
+ * @param {number} rot - rotational movement -100>100
+ * @return {MecanumMove} The new MecanumMove
+  */
+    export function getMecanumMove(lat:number, lon:number, rot:number): MecanumWheelsValue {
+        
+        if (lat<-100) lat=-100; else  if (lat>100) lat=100;
+        if (lon<-100) lon=-100; else  if (lon>100) lon=100;
+        if (rot<-100) rot=-100; else  if (rot>100) rot=100;
+        let r =Math.abs(lat)+Math.abs(lon)+Math.abs(rot)
+        if (r==0) 
+            return CommonMecanumMoves.NoMove;
+        return new MecanumWheelsValue ({
+            FL:(lat+lon+rot)/r, 
+            FR:(lat-lon-rot)/r,
+            BL:(lat-lon+rot)/r,
+            BR:(lat+lon-rot)/r})
+    }
+    /**
+     * Common Mecanum moves. Cosider cartinal points as direction on a map where North means forward.
+     */
+    const  CommonMecanumMoves = {
+        NoMove     :new MecanumWheelsValue ({FL:0, FR:0, BL:0, BR:0}),
+        //rotation :: same value for front wheels and same value for rear wheels
+        RotateCW   : new MecanumWheelsValue ({FL:  1,FR:  1, BL: -1,BR:-1}),
+        RotateCCW  : new MecanumWheelsValue ({FL: -1,FR: -1, BL:  1,BR: 1}),
+        //move : same value left wheels and same value for right wheels
+        North      : new MecanumWheelsValue ({FL:  1,FR:  1, BL:  1,BR: 1}),
+        NorthEast  : new MecanumWheelsValue ({FL:  0,FR:  1, BL:  0,BR: 1}),
+        East       : new MecanumWheelsValue ({FL: -1,FR:  1, BL: -1,BR: 1}),
+        SouthEast  : new MecanumWheelsValue ({FL: -1,FR:  0, BL: -1,BR: 0}),
+        South      : new MecanumWheelsValue ({FL: -1,FR: -1, BL: -1,BR:-1}),
+        SouthWest  : new MecanumWheelsValue ({FL:  0,FR: -1, BL: -1,BR: 0}),
+        West       : new MecanumWheelsValue ({FL:  1,FR: -1, BL:  1,BR:-1}),
+        NorthWest  : new MecanumWheelsValue ({FL:  1,FR:  0, BL:  1,BR: 0}),
+        
+    }
+    
+    
     /**
      * The user selects the 4-way dc motor.
      */
