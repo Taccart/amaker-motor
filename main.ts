@@ -14,9 +14,9 @@
  */
 
 /**
- *This is aMaker:motor user motor and steering control function.
+ *This is aMaker:motor user motor, steering and mecanum wheels control function.
  */
-//% weight=10 color=#1a61a9 icon="\uf013" block="aMaker-motor"
+//% weight=10 color=#1a61a9 icon="\u26DA" block="aMaker-motor"
 namespace amaker_motor {
     const PCA9685_ADDRESS = 0x40
     const MODE1 = 0x00
@@ -24,16 +24,18 @@ namespace amaker_motor {
     const LED0_ON_L = 0x06
 
     export const servo_value_max_backward = 85
-    export const servo_value_min_backward =285
+    export const servo_value_min_backward = 285
     export const servo_value_stopped = 310
     export const servo_value_min_forward = 335
     export const servo_value_max_forward = 535
 
 
+
+
     /**
-     * The user can select ththise 8 steering gear controller.
+     * Mapping for servo numbers to connector on board
      */
-    export enum Servos {
+    export enum Servo {
         S1 = 0x08,
         S2 = 0x07,
         S3 = 0x06,
@@ -44,104 +46,137 @@ namespace amaker_motor {
         S8 = 0x01
     }
 
-    const  allServos  : amaker_motor.Servos[] = [Servos.S1,Servos.S2,Servos.S3,Servos.S4,Servos.S5,Servos.S6,Servos.S7,Servos.S8]
-    
     /**
-     * MecanumWheelsValue  is a placeholder for mecanum
+     * Array of all servos
      */
-    export class MecanumWheelsValue   {
+    export const Servos: amaker_motor.Servo[] = [Servo.S1, Servo.S2, Servo.S3, Servo.S4, Servo.S5, Servo.S6, Servo.S7, Servo.S8]
+
+    /**
+        * Normalize speed to a range between -100 and 100 and return the corresponding value for continuous rotation servo
+        * @param {number} speed - number betwen -100 and 100. Negative = counter clockwise, positive = clockwise. 
+        * @returns value for servo
+        */
+    //% blockId=motor_servo block="toContinuousRotationValue|speed"
+    //% weight=100
+    //% speed.min=-100 lateral_speed.max=100
+    export  function toContinuousRotationValue(speed: number): number {
+
+        if (speed < -100) speed = -100;
+        else if (speed > 100) speed = 100;
+
+        if (speed > 0) {
+            return amaker_motor.servo_value_min_forward + speed / 100 * (amaker_motor.servo_value_max_forward - amaker_motor.servo_value_min_forward);
+        }
+        else if (speed < 0) {
+            return amaker_motor.servo_value_min_backward + speed / 100 * (amaker_motor.servo_value_max_backward - amaker_motor.servo_value_min_backward);
+        }
+        else {
+            return amaker_motor.servo_value_stopped;
+        }
+
+    }
+
+
+    /**
+     * MecanumWheelsValue  is a data structure for mecanum wheels , placed in Front left and right and back left and right.
+     */
+    export class MecanumWheelsValue {
         // Those values are empiric. Maybe could we allow to change them.
         //                                     backward | stop | forward
         // we want to handle speeds as     -100 ...  -1 |    0 |   1 ... 100
         // and this is converted as servo    85 ... 285 |  310 | 335 ... 535
-        
-        public speeds:number[]
-            
-        public toServoValues () : MecanumWheelsValue {
-            return new MecanumWheelsValue( {
-                FL:this.toContinuousRotationValue(this.speeds[0]),
-                FR:this.toContinuousRotationValue(this.speeds[1]),
-                BL:this.toContinuousRotationValue(this.speeds[2]),
-                BR:this.toContinuousRotationValue(this.speeds[3]) }
-            )
-        }
-        /**
-         * Normalize speed to a range between -100 and 100 and return the corresponding value for continuous rotation servo
-         * @param {number} speed - number betwen -100 and 100. Negative = counter clockwise, positive = clockwise. 
-         * @returns 
-         */
-        public toContinuousRotationValue(speed: number ) : number {
-                        
-            if (speed<-100)     speed=-100;
-            else if (speed>100) speed=100;
-            
-            if (speed >0)        {
-                return amaker_motor.servo_value_min_forward + speed/100*(amaker_motor.servo_value_max_forward-amaker_motor.servo_value_min_forward);
-            }
-            else if (speed <0)   {
-                return amaker_motor.servo_value_min_backward + speed/100* (amaker_motor.servo_value_max_backward-amaker_motor.servo_value_min_backward);
-            }
-            else                 { 
-                return amaker_motor.servo_value_stopped; }
 
-        }
-        public constructor (
-            fields? :{
-                FL?:number,
-                FR?:number,
-                BL?:number,
-                BR?:number;
-            }) { 
-                if (fields) {
-                    this.speeds=[fields.FL,fields.FR,fields.BL,fields.BR];
-                }
+        private speeds: number[] // array of FL, FR, BR, BR
+        private values : number[] // array of FL, FR, BR, BR
+        /**
+         * 
+         * @returns array of servo values for front left, right, back left, right servos
+         */
+        public getServoValues(): number[] { return  this.values  }
+        /**
+         * 
+         * @returns array of speeds for front left, right, back left, right servos as given in constructor
+         */
+        public getSpeeds(): number[] { return this.speeds }
+
+        public constructor(
+            fields?: {
+                FL?: number,
+                FR?: number,
+                BL?: number,
+                BR?: number;
+            }) {
+            if (fields) {
+                this.speeds = [ fields.FL, fields.FR, fields.BL, fields.BR];
+                this.values=[
+                    amaker_motor.toContinuousRotationValue(this.speeds[0]),
+                    amaker_motor.toContinuousRotationValue(this.speeds[1]),
+                    amaker_motor.toContinuousRotationValue(this.speeds[2]),
+                    amaker_motor.toContinuousRotationValue(this.speeds[3])
+               ]
             }
-        
+        }
+
     };
 
-	
-/**
- * builds a MecanumMove using given lateral (left-right), longitudinal (forward-backward) and rotational  arguments
- * @param {number} lat - lateral movement -100>100
- * @param {number} lon - longitudinal movement -100>100
- * @param {number} rot - rotational movement -100>100
- * @return {MecanumMove} The new MecanumMove
-  */
-    export function getMecanumMove(lat:number, lon:number, rot:number): MecanumWheelsValue {
-        
-        if (lat<-100) lat=-100; else  if (lat>100) lat=100;
-        if (lon<-100) lon=-100; else  if (lon>100) lon=100;
-        if (rot<-100) rot=-100; else  if (rot>100) rot=100;
-        let r =Math.abs(lat)+Math.abs(lon)+Math.abs(rot)
-        if (r==0) 
-            return CommonMecanumMoves.NoMove;
-        return new MecanumWheelsValue ({
-            FL:(lat+lon+rot)/r, 
-            FR:(lat-lon-rot)/r,
-            BL:(lat-lon+rot)/r,
-            BR:(lat+lon-rot)/r})
-    }
-    /**
-     * Common Mecanum moves. Cosider cartinal points as direction on a map where North means forward.
+    /** Common moves with mecanum wheels
+     * 
      */
-    const  CommonMecanumMoves = {
-        NoMove     :new MecanumWheelsValue ({FL:0, FR:0, BL:0, BR:0}),
-        //rotation :: same value for front wheels and same value for rear wheels
-        RotateCW   : new MecanumWheelsValue ({FL:  1,FR:  1, BL: -1,BR:-1}),
-        RotateCCW  : new MecanumWheelsValue ({FL: -1,FR: -1, BL:  1,BR: 1}),
-        //move : same value left wheels and same value for right wheels
-        North      : new MecanumWheelsValue ({FL:  1,FR:  1, BL:  1,BR: 1}),
-        NorthEast  : new MecanumWheelsValue ({FL:  0,FR:  1, BL:  0,BR: 1}),
-        East       : new MecanumWheelsValue ({FL: -1,FR:  1, BL: -1,BR: 1}),
-        SouthEast  : new MecanumWheelsValue ({FL: -1,FR:  0, BL: -1,BR: 0}),
-        South      : new MecanumWheelsValue ({FL: -1,FR: -1, BL: -1,BR:-1}),
-        SouthWest  : new MecanumWheelsValue ({FL:  0,FR: -1, BL: -1,BR: 0}),
-        West       : new MecanumWheelsValue ({FL:  1,FR: -1, BL:  1,BR:-1}),
-        NorthWest  : new MecanumWheelsValue ({FL:  1,FR:  0, BL:  1,BR: 0}),
-        
+    export const Mecanum_NoMove    = new MecanumWheelsValue({ FL:  0, FR:  0, BL:  0, BR:  0 })
+    export const Mecanum_RotateCW  = new MecanumWheelsValue({ FL:  1, FR:  1, BL: -1, BR: -1 })
+    export const Mecanum_RotateCCW = new MecanumWheelsValue({ FL: -1, FR: -1, BL:  1, BR:  1 })
+    export const Mecanum_North     = new MecanumWheelsValue({ FL:  1, FR:  1, BL:  1, BR:  1 })
+    export const Mecanum_NorthEast = new MecanumWheelsValue({ FL:  0, FR:  1, BL:  0, BR:  1 })
+    export const Mecanum_East      = new MecanumWheelsValue({ FL: -1, FR:  1, BL: -1, BR:  1 })
+    export const Mecanum_SouthEast = new MecanumWheelsValue({ FL: -1, FR:  0, BL: -1, BR:  0 })
+    export const Mecanum_South     = new MecanumWheelsValue({ FL: -1, FR: -1, BL: -1, BR: -1 })
+    export const Mecanum_SouthWest = new MecanumWheelsValue({ FL:  0, FR: -1, BL: -1, BR:  0 })
+    export const Mecanum_West      = new MecanumWheelsValue({ FL:  1, FR: -1, BL:  1, BR: -1 })
+    export const Mecanum_NorthWest = new MecanumWheelsValue({ FL:  1, FR:  0, BL:  1, BR:  0 })
+
+
+    /**
+     * builds a MecanumMove using given lateral (left-right), longitudinal (forward-backward) and rotational  arguments
+     * @param {number} lateral - lateral movement -100>100
+     * @param {number} longitudinal - longitudinal movement -100>100
+     * @param {number} rotational - rotational movement -100>100
+     * @return {MecanumMove} The new MecanumMove
+      */
+    //% blockId=motor_servo block="GetMecanumMove|lateral_speed|logitudinal_speed|rotation_speed"
+    //% weight=100
+    //% lateral_speed.min=-100 lateral_speed.max=100
+    //% logitudinal_speed.min=-100 logitudinal_speed.max=100
+    //% rotation_speed.min=-100 rotation_speed.max=100
+    export function getMecanumMove(lateral: number, longitudinal: number, rotational: number): MecanumWheelsValue {
+
+        if (lateral < -100) lateral = -100; else if (lateral > 100) lateral = 100;
+        if (longitudinal < -100) longitudinal = -100; else if (longitudinal > 100) longitudinal = 100;
+        if (rotational < -100) rotational = -100; else if (rotational > 100) rotational = 100;
+        let r = Math.abs(lateral) + Math.abs(longitudinal) + Math.abs(rotational)
+        if (r == 0)
+            return Mecanum_NoMove;
+        return new MecanumWheelsValue({
+            FL: (lateral + longitudinal + rotational) / r,
+            FR: (lateral - longitudinal - rotational) / r,
+            BL: (lateral - longitudinal + rotational) / r,
+            BR: (lateral + longitudinal - rotational) / r
+        })
     }
-    
-    
+
+    /**
+    * Send Mecanum wheel movement to continuous rotation servos
+    * S1~S8.
+    * 0°~180°.
+    */
+    //% blockId=motor_servo block="setMecanumServos|mecanumMove|mecanumServos"
+    //% weight=100    
+    export function setMecanumServos( mecanumMove :MecanumWheelsValue, mecanumServos:Servo[]) {
+        let s = mecanumMove.getServoValues()
+        for (let i = 0; i < 4; i++) { servoSpeed(mecanumServos[i], s[i]) }
+    }
+
+
+
     /**
      * The user selects the 4-way dc motor.
      */
@@ -162,7 +197,7 @@ namespace amaker_motor {
         CCW = -1,
     }
 
-    
+
     let initialized = false
 
     function i2cWrite(addr: number, reg: number, value: number) {
@@ -224,7 +259,7 @@ namespace amaker_motor {
 
 
     /**
-    * Steering gear control function.
+    * Servo control function.
     * S1~S8.
     * 0°~180°.
     */
@@ -232,18 +267,18 @@ namespace amaker_motor {
     //% weight=100
     //% degree.min=0 degree.max=180
     //% index.fieldEditor="gridpicker" index.fieldOptions.columns=4
-    export function servoPosition(index: Servos, degree: number): void {
+    export function servoPosition(index: Servo, degree: number): void {
         if (!initialized) {
             initPCA9685()
         }
         // 50hz
         let v_us = (degree * 1800 / 180 + 600) // 0.6ms ~ 2.4ms
         let value = v_us * 4096 / 20000
-        setPwm(index + 7, 0, value)
+        this.servoValue ( value)
     }
 
     /**
-    * Steering gear control function.
+    * Continuous rotation servo control function.
     * S1~S8.
     * -100~100.
     */
@@ -251,35 +286,30 @@ namespace amaker_motor {
     //% weight=110
     //% speed.min=-100 speed.max=100
     //% index.fieldEditor="gridpicker" index.fieldOptions.columns=4
-    export function servoSpeed(index: Servos, speed: number): void {
-        if (!initialized) {
-            initPCA9685()
-        }
-	
-	if (speed<0) {setPwm(index + 7, 0, speed*2+289)}
-	else if (speed>0) {setPwm(index + 7, 0, speed*2+319)}
-	else {setPwm(index + 7, 0, speed)}
+    export function servoSpeed(index: Servo, speed: number): void {
+        this.servoValue(index,this.mecanumServos(speed))
+       
     }
 
     /**
-	 * Steering gear control function.
+     * Steering gear control function.
      * S1~S8.
      * -100~100.
-	*/
+    */
     //% blockId=motor_ServoContinuousRotation block="ServoValue|%index|val|%val"
     //% weight=120
     //% val.min=0 val.max=4096
     //% index.fieldEditor="gridpicker" index.fieldOptions.columns=4
-    export function servoValue(index: Servos, val: number): void {
+    export function servoValue(index: Servo, val: number): void {
         if (!initialized) {
             initPCA9685()
         }
 
         setPwm(index + 7, 0, val)
     }
-	
+
     /**
-	 * Execute a motor
+     * Execute a motor
      * M1~M4.
      * speed(0~255).
     */
@@ -312,10 +342,10 @@ namespace amaker_motor {
         }
     }
 
-   
+
 
     /**
-	 * Stop the dc motor.
+     * Stop the dc motor.
     */
     //% weight=20
     //% blockId=motor_motorStop block="Motor stop|%index"
@@ -326,7 +356,7 @@ namespace amaker_motor {
     }
 
     /**
-	 * Stop all motors
+     * Stop all motors
     */
     //% weight=10
     //% blockId=motor_motorStopAll block="Motor Stop All"
