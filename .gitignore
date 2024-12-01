@@ -2,6 +2,7 @@ built
 node_modules
 yotta_modules
 yotta_targets
+microbit
 pxt_modules
 *.db
 *.tgz

@@ -12,22 +12,23 @@
  * @version  V1.0.1
  * @date  2018-03-20
  */
-
 /**
- *This is aMaker:motor user motor, steering and mecanum wheels control function.
+ *This is aMaker:motor to control motor, servos, continuous rotatio servos and movements control for mecanum wheels.
+ It's tested with dfrobo  motor shield for micro:bit 
  */
 //% weight=10 color=#1a61a9 icon="\u26DA" block="aMaker-motor"
+//% groups=['aMaker', 'servo', 'motor', 'mecanum']
 namespace amaker_motor {
     const PCA9685_ADDRESS = 0x40
     const MODE1 = 0x00
     const PRESCALE = 0xFE
     const LED0_ON_L = 0x06
 
-    export const servo_value_max_backward = 85
-    export const servo_value_min_backward = 285
-    export const servo_value_stopped = 310
-    export const servo_value_min_forward = 335
-    export const servo_value_max_forward = 535
+    export let servo_value_max_backward = 85
+    export let servo_value_min_backward = 285
+    export let servo_value_stopped = 310
+    export let servo_value_min_forward = 335
+    export let servo_value_max_forward = 535
 
 
 
@@ -35,30 +36,64 @@ namespace amaker_motor {
     /**
      * Mapping for servo numbers to connector on board
      */
+    //% block  advanced=true
     export enum Servo {
+        //% blockId="Servo_1" block="S1"
         S1 = 0x08,
+        //% blockId="Servo_2" block="S2"
         S2 = 0x07,
+        //% blockId="Servo_3" block="S3"
         S3 = 0x06,
+        //% blockId="Servo_4" block="S4"
         S4 = 0x05,
+        //% blockId="Servo_5" block="S5"
         S5 = 0x04,
+        //% blockId="Servo_6" block="S6"
         S6 = 0x03,
+        //% blockId="Servo_7" block="S7"
         S7 = 0x02,
+        //% blockId="Servo_8" block="S8"
         S8 = 0x01
+    }
+/**
+     * The user selects the 4-way dc motor.
+     */
+    //% block advanced=true
+    export enum Motors {
+        //% blockId="Motor_1" block="M1"
+        M1 = 0x1,
+        //% blockId="Motor_2" block="M2"
+        M2 = 0x2,
+        //% blockId="Motor_3" block="M3"
+        M3 = 0x3,
+        //% blockId="Motor_4" block="M4"
+        M4 = 0x4
+    }
+
+    /**
+     * The user defines the motor rotation direction.
+     */
+    //% block advanced=true
+    export enum Dir {
+        //% blockId="CW" block="CW"
+        CW = 1,
+        //% blockId="CCW" block="CCW"
+        CCW = -1,
     }
 
     /**
      * Array of all servos
      */
+    //% block advanced=true
     export const Servos: amaker_motor.Servo[] = [Servo.S1, Servo.S2, Servo.S3, Servo.S4, Servo.S5, Servo.S6, Servo.S7, Servo.S8]
-
+    //% block  advanced=true
     /**
         * Normalize speed to a range between -100 and 100 and return the corresponding value for continuous rotation servo
         * @param {number} speed - number betwen -100 and 100. Negative = counter clockwise, positive = clockwise. 
         * @returns value for servo
         */
-    //% blockId=motor_servo block="toContinuousRotationValue|speed"
-    //% weight=100
-    //% speed.min=-100 lateral_speed.max=100
+    //% block
+    //% speed.min=-100 speed.max=100 speed.defl=10
     export  function toContinuousRotationValue(speed: number): number {
 
         if (speed < -100) speed = -100;
@@ -80,6 +115,7 @@ namespace amaker_motor {
     /**
      * MecanumWheelsValue  is a data structure for mecanum wheels , placed in Front left and right and back left and right.
      */
+    //% block  advanced=true
     export class MecanumWheelsValue {
         // Those values are empiric. Maybe could we allow to change them.
         //                                     backward | stop | forward
@@ -88,16 +124,7 @@ namespace amaker_motor {
 
         private speeds: number[] // array of FL, FR, BR, BR
         private values : number[] // array of FL, FR, BR, BR
-        /**
-         * 
-         * @returns array of servo values for front left, right, back left, right servos
-         */
-        public getServoValues(): number[] { return  this.values  }
-        /**
-         * 
-         * @returns array of speeds for front left, right, back left, right servos as given in constructor
-         */
-        public getSpeeds(): number[] { return this.speeds }
+        
 
         public constructor(
             fields?: {
@@ -116,23 +143,45 @@ namespace amaker_motor {
                ]
             }
         }
+        /**
+         * 
+         * @returns array of servo values for front left, right, back left, right servos
+         */
+        public getServoValues(): number[] { return  this.values  }
+        /**
+         * 
+         * @returns array of speeds for front left, right, back left, right servos as given in constructor
+         */
+        public getSpeeds(): number[] { return this.speeds }
 
     };
 
     /** Common moves with mecanum wheels
      * 
      */
+    //% blockId="Mecanum_NoMove" block="Mecanum Stop (no move)" advanced=true  
     export const Mecanum_NoMove    = new MecanumWheelsValue({ FL:  0, FR:  0, BL:  0, BR:  0 })
+    //% blockId="Mecanum_RotateCW" block="Mecanum Rotate Clockwise" advanced=true  
     export const Mecanum_RotateCW  = new MecanumWheelsValue({ FL:  1, FR:  1, BL: -1, BR: -1 })
+    //% blockId="Mecanum_RotateCCW" block="Mecanum Rotate Counter Clockwise" advanced=true  
     export const Mecanum_RotateCCW = new MecanumWheelsValue({ FL: -1, FR: -1, BL:  1, BR:  1 })
+    //% blockId="Mecanum_North" block="Mecanum North" advanced=true  
     export const Mecanum_North     = new MecanumWheelsValue({ FL:  1, FR:  1, BL:  1, BR:  1 })
+    //% blockId="Mecanum_NorthEast" block="Mecanum North-East" advanced=true  
     export const Mecanum_NorthEast = new MecanumWheelsValue({ FL:  0, FR:  1, BL:  0, BR:  1 })
+    //% blockId="Mecanum_East" block="Mecanum East" advanced=true  
     export const Mecanum_East      = new MecanumWheelsValue({ FL: -1, FR:  1, BL: -1, BR:  1 })
+    //% blockId="Mecanum_SouthEast" block="Mecanum South-East" advanced=true  
     export const Mecanum_SouthEast = new MecanumWheelsValue({ FL: -1, FR:  0, BL: -1, BR:  0 })
+    //% blockId="Mecanum_South" block="Mecanum South" advanced=true  
     export const Mecanum_South     = new MecanumWheelsValue({ FL: -1, FR: -1, BL: -1, BR: -1 })
+    //% blockId="Mecanum_SouthWest" block="Mecanum South-West" advanced=true  
     export const Mecanum_SouthWest = new MecanumWheelsValue({ FL:  0, FR: -1, BL: -1, BR:  0 })
+    //% blockId="Mecanum_West" block="Mecanum West" advanced=true  
     export const Mecanum_West      = new MecanumWheelsValue({ FL:  1, FR: -1, BL:  1, BR: -1 })
+    //% blockId="Mecanum_NorthWest" block="Mecanum North-West" advanced=true  
     export const Mecanum_NorthWest = new MecanumWheelsValue({ FL:  1, FR:  0, BL:  1, BR:  0 })
+    
 
 
     /**
@@ -142,11 +191,11 @@ namespace amaker_motor {
      * @param {number} rotational - rotational movement -100>100
      * @return {MecanumMove} The new MecanumMove
       */
-    //% blockId=motor_servo block="GetMecanumMove|lateral_speed|logitudinal_speed|rotation_speed"
+    //% block
     //% weight=100
-    //% lateral_speed.min=-100 lateral_speed.max=100
+    //% lateral_speed.min=-100 lateral_speed.max=100 lateral_speed.defl=0
     //% logitudinal_speed.min=-100 logitudinal_speed.max=100
-    //% rotation_speed.min=-100 rotation_speed.max=100
+    //% rotation_speed.min=-100 rotation_speed.max=100 rotation_speed.defl=0
     export function getMecanumMove(lateral: number, longitudinal: number, rotational: number): MecanumWheelsValue {
 
         if (lateral < -100) lateral = -100; else if (lateral > 100) lateral = 100;
@@ -168,8 +217,7 @@ namespace amaker_motor {
     * S1~S8.
     * 0°~180°.
     */
-    //% blockId=motor_servo block="setMecanumServos|mecanumMove|mecanumServos"
-    //% weight=100    
+    //% block
     export function setMecanumServos( mecanumMove :MecanumWheelsValue, mecanumServos:Servo[]) {
         let s = mecanumMove.getServoValues()
         for (let i = 0; i < 4; i++) { servoSpeed(mecanumServos[i], s[i]) }
@@ -177,26 +225,7 @@ namespace amaker_motor {
 
 
 
-    /**
-     * The user selects the 4-way dc motor.
-     */
-    export enum Motors {
-        M1 = 0x1,
-        M2 = 0x2,
-        M3 = 0x3,
-        M4 = 0x4
-    }
-
-    /**
-     * The user defines the motor rotation direction.
-     */
-    export enum Dir {
-        //% blockId="CW" block="CW"
-        CW = 1,
-        //% blockId="CCW" block="CCW"
-        CCW = -1,
-    }
-
+    
 
     let initialized = false
 
@@ -265,7 +294,7 @@ namespace amaker_motor {
     */
     //% blockId=motor_servo block="ServoPosition|%index|degree|%degree"
     //% weight=100
-    //% degree.min=0 degree.max=180
+    //% degree.min=0 degree.max=180 degree.defl=90
     //% index.fieldEditor="gridpicker" index.fieldOptions.columns=4
     export function servoPosition(index: Servo, degree: number): void {
         if (!initialized) {
@@ -284,7 +313,7 @@ namespace amaker_motor {
     */
     //% blockId=motor_ServoContinuousRotation block="ServoSpeed|%index|speed|%speed"
     //% weight=110
-    //% speed.min=-100 speed.max=100
+    //% speed.min=-100 speed.max=100 speed.defl=10
     //% index.fieldEditor="gridpicker" index.fieldOptions.columns=4
     export function servoSpeed(index: Servo, speed: number): void {
         this.servoValue(index,this.mecanumServos(speed))
@@ -296,8 +325,7 @@ namespace amaker_motor {
      * S1~S8.
      * -100~100.
     */
-    //% blockId=motor_ServoContinuousRotation block="ServoValue|%index|val|%val"
-    //% weight=120
+    //% block
     //% val.min=0 val.max=4096
     //% index.fieldEditor="gridpicker" index.fieldOptions.columns=4
     export function servoValue(index: Servo, val: number): void {
@@ -309,16 +337,18 @@ namespace amaker_motor {
     }
 
     /**
-     * Execute a motor
+     * Run motor
      * M1~M4.
      * speed(0~255).
     */
     //% weight=90
-    //% blockId=motor_MotorRun block="Motor|%index|dir|%Dir|speed|%speed"
+    //% block
     //% speed.min=0 speed.max=255
     //% index.fieldEditor="gridpicker" index.fieldOptions.columns=2
     //% direction.fieldEditor="gridpicker" direction.fieldOptions.columns=2
     export function MotorRun(index: Motors, direction: Dir, speed: number): void {
+        if (index > 4 || index <= 0)
+            return
         if (!initialized) {
             initPCA9685()
         }
@@ -329,8 +359,7 @@ namespace amaker_motor {
         if (speed <= -4096) {
             speed = -4095
         }
-        if (index > 4 || index <= 0)
-            return
+
         let pn = (4 - index) * 2
         let pp = (4 - index) * 2 + 1
         if (speed >= 0) {
@@ -347,8 +376,7 @@ namespace amaker_motor {
     /**
      * Stop the dc motor.
     */
-    //% weight=20
-    //% blockId=motor_motorStop block="Motor stop|%index"
+    //% block
     //% index.fieldEditor="gridpicker" index.fieldOptions.columns=2 
     export function motorStop(index: Motors) {
         setPwm((4 - index) * 2, 0, 0);
@@ -358,8 +386,7 @@ namespace amaker_motor {
     /**
      * Stop all motors
     */
-    //% weight=10
-    //% blockId=motor_motorStopAll block="Motor Stop All"
+    //% block
     export function motorStopAll(): void {
         for (let idx = 1; idx <= 4; idx++) {
             motorStop(idx);
