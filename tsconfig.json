@@ -1,9 +1,17 @@
 {
     "compilerOptions": {
         "target": "es5",
+        "module": "commonjs",
+        "strict": true,
         "noImplicitAny": true,
         "outDir": "built",
+        "esModuleInterop": true,
+        "lib": [
+            "es2015"
+        ],
         "rootDir": "."
     },
-    "exclude": ["pxt_modules/**/*test.ts"]
+    "exclude": [
+        "pxt_modules/**/*test.ts"
+    ]
 }

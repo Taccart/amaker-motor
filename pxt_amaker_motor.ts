@@ -1,8 +1,8 @@
-import { MotorPower, MotorPower_Stop } from './motorPower'
+import { MotorPower, MotorPower_Stop } from './dc_motors'
 import { TwoWheelsMotorPower } from './twoWheelsMotorPower'
 import { MecanumWheelsMotorPower } from './fourMecanumMotorPower'
 import { CommonMove } from './commonMoves'
-import { Servo,Angular180Servo,Angular270Servo,ContinuousRotationServo } from './servo_motor';
+import { Servo } from './servo_motor';
 import { DFRobotBoardController } from './dfrobotBoardController';
 
 /**
@@ -15,22 +15,23 @@ namespace pxt_amaker_motor {
     interface ServoMap {
         [pin: number]: Servo;
     }
+
     // Define the servo map
     let servoMap: ServoMap = {};
 
     // Define the dictionary type
     interface FourMotors {
-        pin_FL:number, // Front Left motor power
-        pin_FR:number, // Front Right motor power
-        pin_BL:number,// Back Left motor power
-        pin_BR:number // Back Right motor power
+        pin_FL: number, // Front Left motor power
+        pin_FR: number, // Front Right motor power
+        pin_BL: number, // Back Left motor power
+        pin_BR: number // Back Right motor power
     }
-    // Define the servo map
+
+    // Define the motor map
     let motorMap: FourMotors;
 
-    
+    // Get the instance of the DFRobotBoardController
     let controller = DFRobotBoardController.getInstance();
-
 
     // Enum representing possible moves for a two-wheeled system
     //% color=#92FF73 group="Move" icon="\u2699" block="Typical move directions"
@@ -83,16 +84,8 @@ namespace pxt_amaker_motor {
                 return new MotorPower({ FL: 0, FR: 0, BL: 0, BR: 0 })
         }
     }
-    export function attachMotors(FL: number, FR: number, BL: number, BR: number): void {
-        motorMap = {
-            pin_FL: FL,
-            pin_FR: FR,
-            pin_BL: BL,
-            pin_BR: BR
-        };
-    }
 
-        /**
+    /**
      * Attaches a servo to a specified pin.
      * @param pin The pin number (0 to 8) to which the servo is attached.
      * @param servo The servo object to attach.
@@ -116,61 +109,41 @@ namespace pxt_amaker_motor {
     export function getServo(pin: number): Servo {
         return servoMap[pin];
     }
-    //% color=#C8FFC0 group="Servo" block="set angle %angle| for servo at pin %pin"
-    export function setServoAngle(servoPin: number, angle: number) {
-        let servo = getServo(servoPin);
-        if (!servo) {
-            console.error("No Servo attached to pin " + servoPin);
-            return null;
-        } else
-            if (!(servo instanceof Angular180Servo || servo instanceof Angular270Servo)) {
-                
-                console.error("Not an agular Servo attached to pin " + servoPin + "");
-                return null;
 
-            }
-            controller.setServoValue(servoPin,servo.getPulse(angle))
-    }
-
-    
-    //% color=#C8FFC0 group="Servo" block="set speed %speed|for servo at pin %servoPin"
-    //% speed.min=-1 speed.max=1
-    export function setServoSpeed(servoPin: number, speed: number) {
-        let servo = getServo(servoPin);
-
-        if (!servo) {
-            console.error("No Servo attached to pin " + servoPin);
-            return null;
-        } else
-            if (!(servo instanceof ContinuousRotationServo)) {
-                
-                console.error("Not a continuous rotation Servo attached to pin " + servoPin + "");
-                return null;
-
-            }
-        controller.setServoValue(servoPin,servo.getPulse(speed))
-
-    }
-
-    //% color=#C8FFC0 group="Motor" block="run motor at pin %servoPin"
+    /**
+     * Runs the motor at the specified speed.
+     * @param motor_pin The motor pin number.
+     * @param speed The speed from -1 to 1.
+     */
+    //% color=#C8FFC0 group="Motor" block="run motor at pin %motor_pin"
     //% speed.min=-1 speed.max=1
     export function setMotorSpeed(motor_pin: number, speed: number): void {
         controller.motorRun(motor_pin, speed);
     }
 
-    //% color=#C8FFC0 group="Motor" block="stop motor %motor"
+    /**
+     * Stops the motor at the specified pin.
+     * @param motor_pin The motor pin number.
+     */
+    //% color=#C8FFC0 group="Motor" block="stop motor %motor_pin"
     export function stopMotor(motor_pin: number): void {
         controller.motorStop(motor_pin);
     }
 
+    /**
+     * Stops all motors.
+     */
     //% color=#C8FFC0 group="Motor" block="stop all motors"
     export function stopAllMotors(): void {
         controller.motorStopAll();
     }
 
-
+    /**
+     * Runs the motors with the specified power.
+     * @param power The power object containing the power values for each motor.
+     */
     //% color=#C8FFC0 group="Motor" block="run motors with movement power %power"
-    export function setMotorsPower(power: MotorPower):void {
+    export function setMotorsPower(power: MotorPower): void {
         controller.motorRun(motorMap.pin_FL, power.FL);
         controller.motorRun(motorMap.pin_FR, power.FR);
         controller.motorRun(motorMap.pin_BL, power.BL);
