@@ -24,11 +24,19 @@ import { DFRobotBoardController } from './dfrobotBoardController';
 /**
  * This is the main namespace for the aMaker Motor packages, that makes the link between pxt GUI and aMaker code.
  */
-//% color=#F10A0A icon="\u26DA" block="aMaker Motor"
+//% color=#023A00 icon="\u26DA" block="aMaker Motor"
 namespace amaker_motor {
 
     // Get the instance of the DFRobotBoardController
     let controller = DFRobotBoardController.getInstance();
+
+    // Define the dictionary type
+    interface ServoMap {
+        [pin: number]: Servo;
+    }
+
+    // Define the servo map
+    let servoMap: ServoMap = {};
 
     // Define the dictionary type
     interface FourMotors {
@@ -39,7 +47,7 @@ namespace amaker_motor {
     }
 
     // Enum representing possible moves for a two-wheeled system
-    //% color=#5b5b5b group="Move" icon="\u2699" block="Typical move directions"
+    //% color=#92FF73 group="Move" icon="\u2699" block="Typical move directions"
     export enum Move {
         //% block="stop"
         Stop = CommonMove.Stop,
@@ -66,15 +74,12 @@ namespace amaker_motor {
     }
 
     // Enum representing possible types of motors and wheels
-    //% color=#5b5b5b group="Move" icon="\u26ee" block="Model of wheels" advanced=true
+    //% color=#92FF73 group="Move" icon="\u26ee" block="Model of wheels" advanced=true
     export enum WheelModel {
         //% icon="\u1011A" block="two wheels (left and right sides)"
         TWO_WHEELS,
-        //% icon="\u1011C" block="four DC wheels (2 left and 2 right sides)"
-        FOUR_WHEELS,
         //% icon="\u1011C" block="four mecanum wheels"
-        FOUR_MECANUM_WHEELS,
-        
+        FOUR_MECANUM_WHEELS
     }
     /**
      * 
@@ -82,7 +87,7 @@ namespace amaker_motor {
      * @param model two or four wheels. Default is two wheels.
      * @returns 
      */
-    //% color=#5b5b5b group="Servo" block="get power for move %move|on wheels model %model"
+    //% color=#C8FFC0 group="Servo" block="get power for move %move|on wheels model %model"
     export function getPower(move: Move, model: WheelModel = WheelModel.TWO_WHEELS): MotorPower|undefined {
         if (move == Move.Stop) {
             return MotorPower_Stop;
@@ -103,7 +108,7 @@ namespace amaker_motor {
      * @param pin The pin number (0 to 8) to which the servo is attached.
      * @param servo The servo object to attach.
      */
-    //% color=##999999 group="Servo" block="attach servo at pin %pin"
+    //% color=#C8FFC0 group="Servo" block="attach servo at pin %pin"
     export function attachServoMotor(pin: number, servo: Servo): void {
         if (pin < 0 || pin > 8) {
             console.error("Pin number must be between 0 and 8");
@@ -118,7 +123,7 @@ namespace amaker_motor {
      * @param pin The pin number (0 to 8) from which to get the servo.
      * @returns The servo object attached to the specified pin.
      */
-    //% color=##999999 group="Servo" block="get servo at pin %pin"
+    //% color=#C8FFC0 group="Servo" block="get servo at pin %pin"
     export function getServo(pin: number): Servo {
         return servoMap[pin];
     }
@@ -135,7 +140,7 @@ namespace amaker_motor {
     * @param BL back left motor pin
     * @param BR back right motor pin
      */
-    //% color=#F10A0A group="DC Motor" block="attach motors at pins FL %FL|FR %FR|BL %BL|BR %BR"
+    //% color=#C8FFC0 group="DC Motor" block="attach motors at pins FL %FL|FR %FR|BL %BL|BR %BR"
     //% FL.min=0 FL.max=8 FR.min=0 FR.max=8 BL.min=0 BL.max=8 BR.min=0 BR.max=8
     export function attachDCMotors(FL: number, FR: number, BL?: number, BR?: number): void {
         if (BL != undefined && BR != undefined)
@@ -144,7 +149,7 @@ namespace amaker_motor {
             motorMap = { pin_FL: FL, pin_FR: FR }
     }
     
-     //% color=#F10A0A group="DC Motor" block="run motors with given power %power"
+     //% color=#C8FFC0 group="DC Motor" block="run motors with given power %power"
     export function setDCMotorsPower(power: MotorPower): void {
         if (!motorMap) {
             console.error("Motors not attached. Please attach motors first using attachDCMotors(...).");
@@ -165,7 +170,7 @@ namespace amaker_motor {
      * @param motor_pin The motor pin number.
      * @param speed The speed from -1 to 1.
      */
-    //% color=#F10A0A advanced=true group="DC Motor" block="set DC motor at pin %motor_pin|speed %speed"
+    //% color=#C8FFC0 advanced=true group="DC Motor" block="set DC motor at pin %motor_pin|speed %speed"
     //% speed.min=-1 speed.max=1  expert=true
     export function setMotorSpeed(motor_pin: number, speed: number): void {
         controller.motorRun(motor_pin, speed);
@@ -175,7 +180,7 @@ namespace amaker_motor {
      * Stops the motor at the specified pin.
      * @param motor_pin The motor pin number.
      */
-    //% color=#F10A0A group="DC Motor" block="stop DC motor %motor_pin" expert=true
+    //% color=#C8FFC0 group="DC Motor" block="stop DC motor %motor_pin" expert=true
     export function stopDCMotor(motor_pin: number): void {
         controller.motorStop(motor_pin);
     }
@@ -183,7 +188,7 @@ namespace amaker_motor {
     /**
      * Stops all motors.
      */
-    //% color=#F10A0A group="DC Motor" block="stop all DC motors" expert=true
+    //% color=#C8FFC0 group="DC Motor" block="stop all DC motors" expert=true
     export function stopAllDCMotors(): void {
         controller.motorStopAll();
     }

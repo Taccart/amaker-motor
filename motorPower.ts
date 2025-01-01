@@ -1,4 +1,4 @@
-import { CommonMove } from './commonMoves';
+import { CommonMove } from './commonEnums';
 
 // The MotorPower class represents the power levels for a two or four motor system.
 // In case of two motors, we consider only the front ones. 

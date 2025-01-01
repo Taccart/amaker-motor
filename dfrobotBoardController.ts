@@ -122,7 +122,6 @@ export class DFRobotBoardController {
         if (!this.initialized) {
             this.initPCA9685()
         }
-
         this.setPwm(index + 7, 0, val)
     }
 
